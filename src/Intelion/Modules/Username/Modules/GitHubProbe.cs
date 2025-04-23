@@ -1,0 +1,45 @@
+﻿using Intelion.Core;
+using Intelion.Modules.Username.Models;
+using Intelion.Services;
+
+namespace Intelion.Modules.Username.Modules
+{
+    public class GitHubProbe : ISourceProbe<UsernameTarget, ProbeResult>
+    {
+        public string SourceName => "GitHub";
+
+        public ProbeCategory Category => ProbeCategory.Coding;
+
+        public async Task<ProbeResult> ProbeAsync(UsernameTarget input)
+        {
+            var url = $"https://github.com/{input.Username}";
+
+            try
+            {
+                var resp = await HttpService.Instance.GetAsync(url);
+
+                return new ProbeResult
+                {
+                    Source = SourceName,
+                    Category = Category,
+                    Found = resp.IsSuccessStatusCode,
+                    ProfileUrl = resp.IsSuccessStatusCode ? url : null,
+                    StatusCode = (int)resp.StatusCode,
+                    ErrorMessage = null
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ProbeResult
+                {
+                    Source = SourceName,
+                    Category = Category,
+                    Found = false,
+                    ProfileUrl = null,
+                    StatusCode = 0,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+    }
+}
